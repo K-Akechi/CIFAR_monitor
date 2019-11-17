@@ -7,7 +7,7 @@ import models
 
 model_save_path = './vgg19/'
 log_save_path = './vgg_logs'
-total_epoch = 10
+total_epoch = 200
 iterations = 500
 batch_size = 100
 
@@ -90,7 +90,7 @@ def main(argv=None):
                     val_loss = 0.0
                     val_pre_index = 0
                     add = 1000
-                    for it in range(10):
+                    for val_it in range(10):
                         batch_x = test_x[val_pre_index:val_pre_index + add]
                         batch_y = test_y[val_pre_index:val_pre_index + add]
                         val_pre_index = val_pre_index + add
@@ -107,8 +107,8 @@ def main(argv=None):
                     summary_writer.flush()
 
                     print(
-                        "iteration: %d/%d, cost_time: %ds, train_loss: %.4f, train_acc: %.4f, test_loss: %.4f, test_acc: %.4f" % (
-                        it, iterations, int(time.time() - start_time), train_loss, train_acc, val_loss, val_acc))
+                        "iteration: %d/%d, cost_time: %ds, train_loss: %.4f, train_acc: %.4f, test_loss: %.4f, test_acc: %.4f"
+                        % (it, iterations, int(time.time() - start_time), train_loss, train_acc, val_loss, val_acc))
                 else:
                     print("iteration: %d/%d, train_loss: %.4f, train_acc: %.4f" % (
                     it, iterations, train_loss / it, train_acc / it), end='\r')
