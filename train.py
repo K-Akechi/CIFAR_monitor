@@ -7,9 +7,10 @@ import models
 
 model_save_path = './vgg19/'
 log_save_path = './vgg_logs'
-total_epoch = 200
+total_epoch = 100
 iterations = 500
 batch_size = 100
+weight_decay = 0.0003
 
 
 # def run_testing(sess, ep):
@@ -38,7 +39,8 @@ def main(argv=None):
     y = models.vgg19(x, train_flag)
 
     cross_entropy = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits_v2(labels=y_, logits=y))
-    train_step = tf.train.AdamOptimizer(1e-3).minimize(cross_entropy)
+    l2 = tf.add_n([tf.nn.l2_loss(var) for var in tf.trainable_variables()])
+    train_step = tf.train.AdamOptimizer(1e-3).minimize(cross_entropy + l2 * weight_decay)
 
     correct_prediction = tf.equal(tf.argmax(y, 1), tf.argmax(y_, 1))
     accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
