@@ -11,6 +11,7 @@ total_epoch = 100
 iterations = 500
 batch_size = 100
 weight_decay = 0.0003
+dropout_rate = 0.5
 
 
 # def run_testing(sess, ep):
@@ -31,12 +32,11 @@ weight_decay = 0.0003
 
 
 def main(argv=None):
-    train_x, train_y, test_x, test_y = prepare_data()
     x = tf.placeholder(tf.float32, [None, image_size, image_size, 3])
     y_ = tf.placeholder(tf.float32, [None, class_num])
     train_flag = tf.placeholder(tf.bool)
     keep_prob = tf.placeholder(tf.float32)
-    y = models.vgg19(x, train_flag)
+    y, _ = models.vgg19_mod(x, train_flag, keep_prob)
 
     cross_entropy = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits_v2(labels=y_, logits=y))
     l2 = tf.add_n([tf.nn.l2_loss(var) for var in tf.trainable_variables()])
@@ -61,6 +61,7 @@ def main(argv=None):
             sess.run(init)
 
         for ep in range(1, total_epoch + 1):
+            train_x, train_y, test_x, test_y = prepare_data()
             pre_index = 0
             train_acc = 0.0
             train_loss = 0.0
@@ -73,8 +74,8 @@ def main(argv=None):
                 batch_y = train_y[pre_index:pre_index + batch_size]
 
                 _, batch_loss = sess.run([train_step, cross_entropy],
-                                         feed_dict={x: batch_x, y_: batch_y, train_flag: True})
-                batch_acc = accuracy.eval(feed_dict={x: batch_x, y_: batch_y, train_flag: True})
+                                         feed_dict={x: batch_x, y_: batch_y, train_flag: True, keep_prob: dropout_rate})
+                batch_acc = accuracy.eval(feed_dict={x: batch_x, y_: batch_y, train_flag: True, keep_prob: dropout_rate})
 
                 train_loss += batch_loss
                 train_acc += batch_acc
@@ -97,7 +98,7 @@ def main(argv=None):
                         batch_y = test_y[val_pre_index:val_pre_index + add]
                         val_pre_index = val_pre_index + add
                         loss_, acc_ = sess.run([cross_entropy, accuracy],
-                                               feed_dict={x: batch_x, y_: batch_y, train_flag: False})
+                                               feed_dict={x: batch_x, y_: batch_y, train_flag: False, keep_prob: 1.0})
                         val_loss += loss_ / 10.0
                         val_acc += acc_ / 10.0
                     test_summary = tf.Summary(value=[tf.Summary.Value(tag="test_loss", simple_value=val_loss),
@@ -107,6 +108,8 @@ def main(argv=None):
                     summary_writer.add_summary(train_summary, ep)
                     summary_writer.add_summary(test_summary, ep)
                     summary_writer.flush()
+                    save_path = saver.save(sess, model_save_path, global_step=ep*it)
+                    print("Model saved in file: %s" % save_path)
 
                     print(
                         "iteration: %d/%d, cost_time: %ds, train_loss: %.4f, train_acc: %.4f, test_loss: %.4f, test_acc: %.4f"
@@ -114,9 +117,6 @@ def main(argv=None):
                 else:
                     print("iteration: %d/%d, train_loss: %.4f, train_acc: %.4f" % (
                     it, iterations, train_loss / it, train_acc / it), end='\r')
-
-        save_path = saver.save(sess, model_save_path)
-        print("Model saved in file: %s" % save_path)
 
 
 if __name__ == "__main__":
