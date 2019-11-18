@@ -11,7 +11,7 @@ def bias_variable(shape):
     return tf.get_variable('bias', shape=shape, dtype='float32', initializer=tf.constant_initializer(0.1))
 
 
-def conv2d(x, W, stride):
+def conv2d(x, W, stride=1):
     return tf.nn.conv2d(x, W, strides=[1, stride, stride, 1], padding='SAME')
 
 
@@ -22,6 +22,34 @@ def max_pool_2x2(x):
 def batch_norm(x, train_flag):
     return tf.contrib.layers.batch_norm(x, decay=0.9, center=True, scale=True, epsilon=1e-3, is_training=train_flag,
                                         updates_collections=None)
+
+
+def global_avg_pool(x, k_size=1, stride=1):
+    return tf.nn.avg_pool(x, ksize=[1, k_size, k_size, 1], strides=[1, stride, stride, 1], padding='VALID')
+
+
+def residual_block(x, channels, train_flag, stride=1):
+    filters_in = x.get_shape()[-1]
+    with tf.variable_scope('blockA'):
+        W1 = weight_variable([3, 3, filters_in, channels])
+        B1 = bias_variable([channels])
+        output1 = tf.nn.relu(batch_norm(x, train_flag))
+        conv_1 = conv2d(output1, W1, stride) + B1
+        # print(conv_1.shape)
+    with tf.variable_scope('blockB'):
+        W2 = weight_variable([3, 3, conv_1.get_shape()[-1], channels])
+        B2 = bias_variable([channels])
+        output2 = tf.nn.relu(batch_norm(conv_1, train_flag))
+        conv_2 = conv2d(output2, W2, stride=1) + B2
+    with tf.variable_scope('merge'):
+        if stride > 1:
+            W3 = weight_variable([1, 1, filters_in, channels])
+            B3 = bias_variable([channels])
+            projection = conv2d(output1, W3, stride=2) + B3
+            block = tf.add(conv_2, projection)
+        else:
+            block = tf.add(conv_2, x)
+    return block
 
 
 def vgg19(image, train_flag):

@@ -18,14 +18,14 @@ print('data retrieve success.')
 color = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22',
              '#17becf']
 start_time = time.time()
-pca = TSNE(n_components=3)
+pca = TSNE(n_components=2)
 pca_reduction = pca.fit_transform(interValues_train)
 fig = plt.figure(1)
-ax = Axes3D(fig)
+# ax = Axes3D(fig)
 for i in range(10):
     print(pca_reduction[labels_train == i, 0].shape)
-    ax.scatter(pca_reduction[labels_train == i, 0], pca_reduction[labels_train == i, 1],
-               pca_reduction[labels_train == i, 2], c=color[i], marker='o', s=2, linewidths=0, alpha=0.8)
+    plt.scatter(pca_reduction[labels_train == i, 0], pca_reduction[labels_train == i, 1],
+                c=color[i], marker='o', s=2, linewidths=0, alpha=0.8)
 
 # tsne = TSNE(n_components=2)
 # tsne_reduction = tsne.fit_transform(interValues_train)
@@ -36,5 +36,5 @@ for i in range(10):
 #                 s=2, linewidths=0, alpha=0.8, label='%s' % i)
 
 print('{}seconds.'.format(time.time()-start_time))
-plt.savefig('test2.png', bbox_inches='tight')
+# plt.savefig('test2.png', bbox_inches='tight')
 plt.show()
