@@ -5,14 +5,14 @@ import time
 from data_utility import *
 import models
 
-model_save_path = './vgg19/'
+model_save_path = './vgg19_mod/'
 log_save_path = './vgg_logs'
 total_epoch = 100
 iterations = 500
 batch_size = 100
 weight_decay = 0.0003
 dropout_rate = 0.5
-
+momentum_rate = 0.9
 
 # def run_testing(sess, ep):
 #     acc = 0.0
@@ -36,11 +36,13 @@ def main(argv=None):
     y_ = tf.placeholder(tf.float32, [None, class_num])
     train_flag = tf.placeholder(tf.bool)
     keep_prob = tf.placeholder(tf.float32)
-    y, _ = models.resnet(x, train_flag)
+    y, _ = models.vgg19_mod(x, train_flag, keep_prob)
 
     cross_entropy = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits_v2(labels=y_, logits=y))
     l2 = tf.add_n([tf.nn.l2_loss(var) for var in tf.trainable_variables()])
-    train_step = tf.train.AdamOptimizer(1e-4).minimize(cross_entropy + l2 * weight_decay)
+    # train_step = tf.train.AdamOptimizer(1e-4).minimize(cross_entropy + l2 * weight_decay)
+    train_step = tf.train.MomentumOptimizer(0.001, momentum_rate, use_nesterov=True).minimize(
+        cross_entropy + l2 * weight_decay)
 
     correct_prediction = tf.equal(tf.argmax(y, 1), tf.argmax(y_, 1))
     accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
@@ -62,6 +64,7 @@ def main(argv=None):
 
         for ep in range(1, total_epoch + 1):
             train_x, train_y, test_x, test_y = prepare_data()
+            train_x, test_x = data_preprocessing(train_x, test_x)
             pre_index = 0
             train_acc = 0.0
             train_loss = 0.0
@@ -72,7 +75,7 @@ def main(argv=None):
             for it in range(1, iterations + 1):
                 batch_x = train_x[pre_index:pre_index + batch_size]
                 batch_y = train_y[pre_index:pre_index + batch_size]
-
+                batch_x = data_augmentation(batch_x)
                 _, batch_loss = sess.run([train_step, cross_entropy],
                                          feed_dict={x: batch_x, y_: batch_y, train_flag: True, keep_prob: dropout_rate})
                 batch_acc = accuracy.eval(feed_dict={x: batch_x, y_: batch_y, train_flag: True, keep_prob: dropout_rate})

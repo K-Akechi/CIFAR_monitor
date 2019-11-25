@@ -10,7 +10,7 @@ class_num = 10
 image_size = 32
 img_channels = 3
 
-
+# from https://github.com/BIGBALLON/cifar-10-cnn/blob/master/Tensorflow_version/data_utility.py
 # ========================================================== #
 # ├─ prepare_data()
 #  ├─ download training data if not exist by download_data()
@@ -60,10 +60,12 @@ def download_data():
             tar.extractall()
             tar.close()
 
+
 def unpickle(file):
     with open(file, 'rb') as fo:
         dict = pickle.load(fo, encoding='bytes')
     return dict
+
 
 def load_data_one(file):
     batch  = unpickle(file)
@@ -71,6 +73,7 @@ def load_data_one(file):
     labels = batch[b'labels']
     print("Loading %s : %d." %(file, len(data)))
     return data, labels
+
 
 def load_data(files, data_dir, label_count):
     global image_size, img_channels
@@ -83,6 +86,7 @@ def load_data(files, data_dir, label_count):
     data = data.reshape([-1,img_channels, image_size, image_size])
     data = data.transpose([0, 2, 3, 1])
     return data, labels
+
 
 def prepare_data():
     print("======Loading data======")
@@ -108,6 +112,72 @@ def prepare_data():
     print("======Prepare Finished======")
 
     return train_data, train_labels, test_data, test_labels
+
+
+# ========================================================== #
+# ├─ _random_crop()
+# ├─ _random_flip_leftright()
+# ├─ data_augmentation()
+# └─ color_preprocessing()
+# ========================================================== #
+
+def _random_crop(batch, crop_shape, padding=None):
+    oshape = np.shape(batch[0])
+
+    if padding:
+        oshape = (oshape[0] + 2 * padding, oshape[1] + 2 * padding)
+    new_batch = []
+    npad = ((padding, padding), (padding, padding), (0, 0))
+    for i in range(len(batch)):
+        new_batch.append(batch[i])
+        if padding:
+            new_batch[i] = np.lib.pad(batch[i], pad_width=npad,
+                                      mode='constant', constant_values=0)
+        nh = random.randint(0, oshape[0] - crop_shape[0])
+        nw = random.randint(0, oshape[1] - crop_shape[1])
+        new_batch[i] = new_batch[i][nh:nh + crop_shape[0],
+                       nw:nw + crop_shape[1]]
+    return new_batch
+
+
+def _random_flip_leftright(batch):
+    for i in range(len(batch)):
+        if bool(random.getrandbits(1)):
+            batch[i] = np.fliplr(batch[i])
+    return batch
+
+
+def color_preprocessing(x_train, x_test):
+    x_train = x_train.astype('float32')
+    x_test = x_test.astype('float32')
+    mean = [125.307, 122.95, 113.865]
+    std = [62.9932, 62.0887, 66.7048]
+    for i in range(3):
+        x_train[:, :, :, i] = (x_train[:, :, :, i] - mean[i]) / std[i]
+        x_test[:, :, :, i] = (x_test[:, :, :, i] - mean[i]) / std[i]
+    return x_train, x_test
+
+
+def data_augmentation(batch):
+    batch = _random_flip_leftright(batch)
+    batch = _random_crop(batch, [32, 32], 4)
+    return batch
+
+
+def data_preprocessing(x_train, x_test):
+
+    x_train = x_train.astype('float32')
+    x_test = x_test.astype('float32')
+
+    x_train[:,:,:,0] = (x_train[:,:,:,0] - np.mean(x_train[:,:,:,0])) / np.std(x_train[:,:,:,0])
+    x_train[:,:,:,1] = (x_train[:,:,:,1] - np.mean(x_train[:,:,:,1])) / np.std(x_train[:,:,:,1])
+    x_train[:,:,:,2] = (x_train[:,:,:,2] - np.mean(x_train[:,:,:,2])) / np.std(x_train[:,:,:,2])
+
+    x_test[:,:,:,0] = (x_test[:,:,:,0] - np.mean(x_test[:,:,:,0])) / np.std(x_test[:,:,:,0])
+    x_test[:,:,:,1] = (x_test[:,:,:,1] - np.mean(x_test[:,:,:,1])) / np.std(x_test[:,:,:,1])
+    x_test[:,:,:,2] = (x_test[:,:,:,2] - np.mean(x_test[:,:,:,2])) / np.std(x_test[:,:,:,2])
+
+    return x_train, x_test
 
 
 if __name__ == '__main__':
