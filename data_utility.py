@@ -93,16 +93,16 @@ def prepare_data():
     download_data()
     data_dir = './data/cifar-10-batches-py'
     image_dim = image_size * image_size * img_channels
-    meta = unpickle( data_dir + '/batches.meta')
+    meta = unpickle(data_dir + '/batches.meta')
 
     label_names = meta[b'label_names']
     label_count = len(label_names)
-    train_files = [ 'data_batch_%d' % d for d in range(1,6) ]
+    train_files = ['data_batch_%d' % d for d in range(1, 6)]
     train_data, train_labels = load_data(train_files, data_dir, label_count)
-    test_data, test_labels = load_data([ 'test_batch' ], data_dir, label_count)
+    test_data, test_labels = load_data(['test_batch'], data_dir, label_count)
 
-    print("Train data:",np.shape(train_data), np.shape(train_labels))
-    print("Test data :",np.shape(test_data), np.shape(test_labels))
+    print("Train data:", np.shape(train_data), np.shape(train_labels))
+    print("Test data :", np.shape(test_data), np.shape(test_labels))
     print("======Load finished======")
 
     print("======Shuffling data======")
