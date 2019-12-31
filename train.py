@@ -7,7 +7,7 @@ import models
 
 model_save_path = './vgg19_mod/'
 log_save_path = './vgg_logs'
-total_epoch = 10
+total_epoch = 50
 iterations = 500
 batch_size = 100
 weight_decay = 0.0003
@@ -119,7 +119,7 @@ def main(argv=None):
                         % (it, iterations, int(time.time() - start_time), train_loss, train_acc, val_loss, val_acc))
                 else:
                     print("iteration: %d/%d, train_loss: %.4f, train_acc: %.4f" % (
-                    it, iterations, train_loss / it, train_acc / it), end='\r')
+                    it, iterations, train_loss / it, train_acc / it))
 
 
 if __name__ == "__main__":
