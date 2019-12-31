@@ -7,7 +7,7 @@ import models
 
 model_save_path = './vgg19_mod/'
 log_save_path = './vgg_logs'
-total_epoch = 100
+total_epoch = 10
 iterations = 500
 batch_size = 100
 weight_decay = 0.0003
