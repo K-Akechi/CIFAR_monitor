@@ -41,7 +41,7 @@ def main(argv=None):
     cross_entropy = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits_v2(labels=y_, logits=y))
     l2 = tf.add_n([tf.nn.l2_loss(var) for var in tf.trainable_variables()])
     # train_step = tf.train.AdamOptimizer(1e-4).minimize(cross_entropy + l2 * weight_decay)
-    train_step = tf.train.MomentumOptimizer(0.001, momentum_rate, use_nesterov=True).minimize(
+    train_step = tf.train.MomentumOptimizer(0.1, momentum_rate, use_nesterov=True).minimize(
         cross_entropy + l2 * weight_decay)
 
     correct_prediction = tf.equal(tf.argmax(y, 1), tf.argmax(y_, 1))
@@ -75,7 +75,7 @@ def main(argv=None):
             for it in range(1, iterations + 1):
                 batch_x = train_x[pre_index:pre_index + batch_size]
                 batch_y = train_y[pre_index:pre_index + batch_size]
-                batch_x = data_augmentation(batch_x)
+                # batch_x = data_augmentation(batch_x)
                 _, batch_loss = sess.run([train_step, cross_entropy],
                                          feed_dict={x: batch_x, y_: batch_y, train_flag: True, keep_prob: dropout_rate})
                 batch_acc = accuracy.eval(feed_dict={x: batch_x, y_: batch_y, train_flag: True, keep_prob: dropout_rate})
