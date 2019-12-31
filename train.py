@@ -41,7 +41,7 @@ def main(argv=None):
     cross_entropy = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits_v2(labels=y_, logits=y))
     l2 = tf.add_n([tf.nn.l2_loss(var) for var in tf.trainable_variables()])
     # train_step = tf.train.AdamOptimizer(1e-4).minimize(cross_entropy + l2 * weight_decay)
-    train_step = tf.train.MomentumOptimizer(0.01, momentum_rate, use_nesterov=True).minimize(
+    train_step = tf.train.MomentumOptimizer(0.001, momentum_rate, use_nesterov=True).minimize(
         cross_entropy + l2 * weight_decay)
 
     correct_prediction = tf.equal(tf.argmax(y, 1), tf.argmax(y_, 1))
@@ -119,7 +119,7 @@ def main(argv=None):
                         % (it, iterations, int(time.time() - start_time), train_loss, train_acc, val_loss, val_acc))
                 else:
                     print("iteration: %d/%d, train_loss: %.4f, train_acc: %.4f" % (
-                    it, iterations, train_loss / it, train_acc / it))
+                    it, iterations, train_loss / it, train_acc / it), end='\r')
 
 
 if __name__ == "__main__":
